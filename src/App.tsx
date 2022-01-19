@@ -1,10 +1,16 @@
+import Home from "./components/pages/Main"
+import MainLayout from "./components/layouts/MainLayout"
+import { SWRConfig } from "swr"
+
+const swrFetcher = (url: RequestInfo, init?: RequestInit) => fetch(url, init).then((res) => res.json())
+
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1 className="text-3xl font-bold underline">Hello world!</h1>
-      </header>
-    </div>
+    <SWRConfig value={{ fetcher: swrFetcher }}>
+      <MainLayout>
+        <Home />
+      </MainLayout>
+    </SWRConfig>
   )
 }
 
