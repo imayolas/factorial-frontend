@@ -1,28 +1,9 @@
 import "chart.js/auto"
 import { useMetrics, MetricsParsedData } from "hooks/appHooks"
 import { useEffect, useMemo, useState } from "react"
-import { Chart } from "react-chartjs-2"
+import { Chart as ChartJS } from "react-chartjs-2"
 import moment from "moment"
-
-const myData = {
-  labels: ["January", "February", "March", "April", "May", "June", "July"],
-  datasets: [
-    {
-      label: "My First Dataset",
-      data: [65, 59, 80, 81, 56, 55, 40],
-      fill: false,
-      borderColor: "rgb(75, 192, 192)",
-      tension: 0.5,
-    },
-    {
-      label: "My Second Datasetxxx",
-      data: [28, 48, 40, 19, 86, 27, 90],
-      fill: false,
-      borderColor: "rgb(90, 50, 30)",
-      tension: 0.5,
-    },
-  ],
-}
+import LineChart from "components/ui/LineChart"
 
 interface TransformerParams {
   data: MetricsParsedData
@@ -31,25 +12,8 @@ interface TransformerParams {
   groupBy: "minute" | "hour" | "day"
 }
 
-const transformApiDataToChartJsDataset = (apiData: MetricsParsedData) => {
-  const labels = Object.keys(apiData)
-
-  const datasets = Object.entries(apiData).map(([metricName, data], index) => {
-    return {
-      id: index + 1,
-      label: metricName,
-      data: data[1],
-    }
-  })
-
-  return myData
-  return {
-    // labels,
-    // datasets,
-  }
-}
-
-const _getMinMaxDates = (datesCollection: Array<Date>) => {
+const _getMinMaxDates = (datesCollection1: Array<Date>, datesCollection2?: Array<Date>) => {
+  const datesCollection = [...datesCollection1].concat(datesCollection2 || [])
   const momentizedDates = datesCollection.map((date) => moment(date))
   const minDate = moment.min(momentizedDates).toDate()
   const maxDate = moment.max(momentizedDates).toDate()
@@ -73,7 +37,7 @@ const _getFillerDates = (startDate: Date, endDate: Date, groupBy: "minute" | "ho
   return fillerDates
 }
 
-const transformer = (params: TransformerParams) => {
+const _getLabel = (params: TransformerParams) => {
   const { data, primaryDimension, secondaryDimension, groupBy } = params
   const primaryDimensionData = data[primaryDimension]
   const secondaryDimensionData = secondaryDimension ? data[secondaryDimension] : undefined
@@ -81,31 +45,93 @@ const transformer = (params: TransformerParams) => {
   const primaryDimensionDates = primaryDimensionData.map(([date]) => date)
   const secondaryDimensionDates = secondaryDimensionData && secondaryDimensionData.map(([date]) => date)
 
-  const mergedDates = [...primaryDimensionDates].concat(secondaryDimensionDates || [])
+  const { minDate, maxDate } = _getMinMaxDates(primaryDimensionDates, secondaryDimensionDates)
 
-  const { minDate, maxDate } = _getMinMaxDates(mergedDates)
-  const fillerDates = _getFillerDates(minDate, maxDate, groupBy).map((date) => moment(date).format("YYYY-MM-DD"))
-  console.log(1, fillerDates)
+  let dateFormat: string = "YYYY-MM-DD"
+  if (groupBy === "minute") {
+    dateFormat += " HH:mm"
+  } else if (groupBy === "hour") {
+    dateFormat += " HH"
+  }
+  return _getFillerDates(minDate, maxDate, groupBy).map((date) => moment(date).format(dateFormat))
+}
+
+const _getDatasets = (params: TransformerParams) => {
+  const { data, primaryDimension, secondaryDimension, groupBy } = params
+  const primaryDimensionData = data[primaryDimension]
+  const secondaryDimensionData = secondaryDimension ? data[secondaryDimension] : undefined
+
+  const primaryDimensionDates = primaryDimensionData.map(([date]) => date)
+  const secondaryDimensionDates = secondaryDimensionData && secondaryDimensionData.map(([date]) => date)
+
+  const { minDate, maxDate } = _getMinMaxDates(primaryDimensionDates, secondaryDimensionDates)
+
+  const startMoment = moment(minDate)
+  const endMoment = moment(maxDate)
+
+  const primaryDimensionDataFilledWithBlanks = []
+  const secondaryDimensionDataFilledWithBlanks = []
+
+  while (startMoment.isSameOrBefore(endMoment)) {
+    const primaryDataPoint = primaryDimensionData.find(([date]) => moment(date).isSame(startMoment))
+    primaryDimensionDataFilledWithBlanks.push(primaryDataPoint ? primaryDataPoint[1] : null)
+
+    if (secondaryDimensionData) {
+      const secondaryDataPoint = secondaryDimensionData.find(([date]) => moment(date).isSame(startMoment))
+      secondaryDimensionDataFilledWithBlanks.push(secondaryDataPoint ? secondaryDataPoint[1] : null)
+    }
+
+    if (groupBy === "minute") {
+      startMoment.add(1, "minute")
+    } else if (groupBy === "hour") {
+      startMoment.add(1, "hour")
+    } else if (groupBy === "day") {
+      startMoment.add(1, "day")
+    }
+  }
+
+  const datasets = [
+    {
+      label: primaryDimension,
+      data: primaryDimensionDataFilledWithBlanks,
+      fill: false,
+      borderColor: "rgb(75, 192, 192)",
+      tension: 0.5,
+    },
+  ]
+
+  if (secondaryDimension) {
+    datasets.push({
+      label: secondaryDimension,
+      data: secondaryDimensionDataFilledWithBlanks,
+      fill: false,
+      borderColor: "rgb(90, 180, 321)",
+      tension: 0.5,
+    })
+  }
+  return datasets
+}
+
+const transformer = (params: TransformerParams) => {
+  const primaryDimensionDataNormalized = params.data[params.primaryDimension].map(([date, value]) => {
+    return [moment(date).startOf(params.groupBy).toDate(), value]
+  })
+
+  const secondaryDimensionDataNormalized =
+    params.secondaryDimension &&
+    params.data[params.secondaryDimension].map(([date, value]) => {
+      return [moment(date).startOf(params.groupBy).toDate(), value]
+    })
+
+  const normalizedParams = {
+    ...params,
+    primaryDimensionData: primaryDimensionDataNormalized,
+    secondaryDimensionData: secondaryDimensionDataNormalized,
+  }
 
   return {
-    labels: fillerDates,
-    datasets: [
-      {
-        label: "My First Dataset",
-        data: [65, 59, 80, 81, 56, 55, 40],
-        fill: false,
-        borderColor: "rgb(75, 192, 192)",
-        tension: 0.5,
-      },
-      {
-        label: "My Second Dataset",
-        data: [28, 32, 90, 19, 86, 27, 90],
-        fill: false,
-        borderColor: "rgb(80, 120, 15)",
-        tension: 0.5,
-        spanGaps: true,
-      },
-    ],
+    labels: _getLabel(normalizedParams),
+    datasets: _getDatasets(normalizedParams),
   }
 }
 
@@ -143,8 +169,9 @@ const Main = () => {
 
   return (
     <div>
+      <LineChart data={metrics} primaryDimension={primaryDimension} secondaryDimension={secondaryDimension} />
       <div className="max-w-2xl mx-auto">
-        {chartjsData && <Chart type="line" datasetIdKey="id" data={chartjsData} />}
+        {chartjsData && <ChartJS type="line" datasetIdKey="id" data={chartjsData} />}
       </div>
     </div>
   )
