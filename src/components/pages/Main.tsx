@@ -5,6 +5,7 @@ import { useEffect, useReducer, Reducer } from "react"
 import LineChart from "components/ui/LineChart"
 import Select from "components/ui/Select"
 import DateInput from "components/ui/DateInput"
+import moment from "moment"
 
 interface MainState {
   primaryDimension: string | undefined
@@ -18,8 +19,8 @@ const initialState: MainState = {
   primaryDimension: undefined,
   secondaryDimension: undefined,
   groupBy: "day",
-  fromDate: undefined,
-  toDate: undefined,
+  fromDate: moment().subtract(1, "month").toDate(),
+  toDate: new Date(),
 }
 
 type MainStateAction =
@@ -118,10 +119,18 @@ const Main = () => {
           />
         </div>
         <div>
-          <DateInput label="Date from" onChange={(value) => dispatch({ type: "SET_FROM_DATE", payload: value })} />
+          <DateInput
+            label="Date from"
+            value={state.fromDate}
+            onChange={(value) => dispatch({ type: "SET_FROM_DATE", payload: value })}
+          />
         </div>
         <div>
-          <DateInput label="Date to" onChange={(value) => dispatch({ type: "SET_TO_DATE", payload: value })} />
+          <DateInput
+            label="Date to"
+            value={state.toDate}
+            onChange={(value) => dispatch({ type: "SET_TO_DATE", payload: value })}
+          />
         </div>
       </div>
       {primaryDimensionData && (

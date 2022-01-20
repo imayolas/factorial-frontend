@@ -1,15 +1,19 @@
 import classnames from "utils/classnames"
-
+import moment from "moment"
 interface DateInputProps {
   name?: string
   label?: string
   className?: string
   options?: Array<string>
-  value?: string | undefined | null
+  value?: string | Date | undefined | null
   onChange?: (value: Date) => void
 }
 
 const DateInput = ({ name, label, className, options, value = null, onChange, ...props }: DateInputProps) => {
+  if (typeof value === "string") {
+    value = new Date(value)
+  }
+
   const _onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onChange && onChange(new Date(event.target.value))
   }
@@ -28,7 +32,7 @@ const DateInput = ({ name, label, className, options, value = null, onChange, ..
           className
         )}
         onChange={_onChange}
-        value={value ? value : undefined}
+        value={value ? moment(value).format("YYYY-MM-DD") : undefined}
         {...props}
       />
     </div>
