@@ -1,32 +1,34 @@
+import { useMemo } from "react"
 import useSWR from "swr"
 
-export interface Metric {
-  start_date: string
-  name: string
-  average: number
+export interface MetricsRawData {
+  [key: string]: Array<[string, number]>
 }
 
-interface MetricsAPIResponse {
-  meta: Array<{ name: string; type: string }>
-  data: Array<Metric>
-  rows: number
-  statistics: {
-    elapsed: number
-    rows_read: number
-    bytes_read: number
-  }
-  transferred: number
+export interface MetricsParsedData {
+  [key: string]: Array<[Date, number]>
 }
 
 export const useMetrics = () => {
-  let { data, error, mutate } = useSWR<MetricsAPIResponse>(`http://localhost:4001/metrics?groupBy=day`, {
+  let { data, error, mutate } = useSWR<MetricsRawData>(`http://localhost:4001/metrics?groupBy=day`, {
     dedupingInterval: 10000,
   })
 
-  console.log(2, data, error)
+  const parsedData = useMemo(() => {
+    if (!data) {
+      return null
+    }
+
+    const res: MetricsParsedData = {}
+
+    Object.entries(data).forEach(([metricName, metricData]) => {
+      res[metricName] = metricData.map(([date, value]) => [new Date(date), value])
+    })
+    return res
+  }, [data])
 
   return {
-    data,
+    data: parsedData,
     isLoading: !error && !data,
     error,
     mutate,
