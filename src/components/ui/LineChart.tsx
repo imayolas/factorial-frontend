@@ -10,15 +10,9 @@ export interface LineChartDimensionParams {
 
 export interface LineChartProps {
   primaryDimension: LineChartDimensionParams
-  // secondaryDimension?: LineChartDimensionParams
+  secondaryDimension?: LineChartDimensionParams
   groupBy: "minute" | "hour" | "day"
 }
-
-// interface TransformerParams {
-//   primaryDimension: LineChartDimensionParams
-//   secondaryDimension?: LineChartDimensionParams
-//   groupBy: "minute" | "hour" | "day"
-// }
 
 const _getMinMaxDates = (datesCollection1: Array<Date>, datesCollection2?: Array<Date>) => {
   const datesCollection = [...datesCollection1].concat(datesCollection2 || [])
@@ -46,13 +40,12 @@ const _getFillerDates = (startDate: Date, endDate: Date, groupBy: "minute" | "ho
 }
 
 const _getChartLabels = (params: LineChartProps) => {
-  const { primaryDimension, groupBy } = params
+  const { primaryDimension, secondaryDimension, groupBy } = params
 
   const primaryDimensionDates = primaryDimension.data.map(([date]) => date)
-  // const secondaryDimensionDates = secondaryDimension && secondaryDimension.map(([date]) => date)
+  const secondaryDimensionDates = secondaryDimension && secondaryDimension.data.map(([date]) => date)
 
-  // const { minDate, maxDate } = _getMinMaxDates(primaryDimensionDates, secondaryDimensionDates)
-  const { minDate, maxDate } = _getMinMaxDates(primaryDimensionDates)
+  const { minDate, maxDate } = _getMinMaxDates(primaryDimensionDates, secondaryDimensionDates)
 
   let dateFormat: string = "YYYY-MM-DD"
   if (groupBy === "minute") {
@@ -64,27 +57,26 @@ const _getChartLabels = (params: LineChartProps) => {
 }
 
 const _getChartDatasets = (params: LineChartProps) => {
-  const { primaryDimension, groupBy } = params
+  const { primaryDimension, secondaryDimension, groupBy } = params
 
   const primaryDimensionDates = primaryDimension.data.map(([date]) => date)
-
-  // const { minDate, maxDate } = _getMinMaxDates(primaryDimensionDates, secondaryDimensionDates)
-  const { minDate, maxDate } = _getMinMaxDates(primaryDimensionDates)
+  const secondaryDimensionDates = secondaryDimension && secondaryDimension.data.map(([date]) => date)
+  const { minDate, maxDate } = _getMinMaxDates(primaryDimensionDates, secondaryDimensionDates)
 
   const startMoment = moment(minDate)
   const endMoment = moment(maxDate)
 
   const primaryDimensionDataFilledWithBlanks = []
-  // const secondaryDimensionDataFilledWithBlanks = []
+  const secondaryDimensionDataFilledWithBlanks = []
 
   while (startMoment.isSameOrBefore(endMoment)) {
     const primaryDataPoint = primaryDimension.data.find(([date]) => moment(date).isSame(startMoment))
     primaryDimensionDataFilledWithBlanks.push(primaryDataPoint ? primaryDataPoint[1] : null)
 
-    // if (secondaryDimensionData) {
-    //   const secondaryDataPoint = secondaryDimensionData.find(([date]) => moment(date).isSame(startMoment))
-    //   secondaryDimensionDataFilledWithBlanks.push(secondaryDataPoint ? secondaryDataPoint[1] : null)
-    // }
+    if (secondaryDimension) {
+      const secondaryDataPoint = secondaryDimension.data.find(([date]) => moment(date).isSame(startMoment))
+      secondaryDimensionDataFilledWithBlanks.push(secondaryDataPoint ? secondaryDataPoint[1] : null)
+    }
 
     if (groupBy === "minute") {
       startMoment.add(1, "minute")
@@ -105,60 +97,39 @@ const _getChartDatasets = (params: LineChartProps) => {
     },
   ]
 
-  // if (secondaryDimension) {
-  //   datasets.push({
-  //     label: secondaryDimension,
-  //     data: secondaryDimensionDataFilledWithBlanks,
-  //     fill: false,
-  //     borderColor: "rgb(90, 180, 321)",
-  //     tension: 0.5,
-  //   })
-  // }
+  if (secondaryDimension) {
+    datasets.push({
+      label: secondaryDimension.name,
+      data: secondaryDimensionDataFilledWithBlanks,
+      fill: false,
+      borderColor: "rgb(90, 180, 321)",
+      tension: 0.5,
+    })
+  }
   return datasets
 }
 
-// const _transformInputDataToChartJsSchema = (params: TransformerParams) => {
-//   const { primaryDimension, secondaryDimension, groupBy } = params
-
-//   const primaryDimensionDataNormalized: LineChartDimensionParams[] = primaryDimension.data.map(([date, value]) => {
-//     return [moment(date).startOf(params.groupBy).toDate(), value]
-//   })
-
-//   let secondaryDimensionDataNormalized: LineChartDimensionParams[] | undefined
-//   if (secondaryDimension) {
-//     secondaryDimensionDataNormalized = secondaryDimension.data.map(([date, value]): LineChartDimensionParams => {
-//       const nextDate: Date = moment(date).startOf(params.groupBy).toDate()
-//       return [nextDate, value]
-//     })
-//   }
-
-//   const normalizedParams = {
-//     groupBy,
-//     primaryDimension: { name: primaryDimension.name, data: primaryDimensionDataNormalized },
-//     secondaryDimension: secondaryDimension && { name: secondaryDimension.name, data: secondaryDimensionDataNormalized },
-//   }
-
-//   return {
-//     labels: _getLabel(normalizedParams),
-//     datasets: _getDatasets(normalizedParams),
-//   }
-// }
-
 const _transformInputDataToChartJsSchema = (params: LineChartProps) => {
-  const { primaryDimension, groupBy } = params
+  const { primaryDimension, secondaryDimension, groupBy } = params
 
   // Set all input dates to the beginning of the groupBy period
   const primaryDimensionDataNormalized: [Date, number][] = primaryDimension.data.map(([date, value]) => {
     return [moment(date).startOf(groupBy).toDate(), value]
   })
+  const secondaryDimensionDataNormalized: [Date, number][] | undefined =
+    secondaryDimension &&
+    secondaryDimension.data.map(([date, value]) => {
+      return [moment(date).startOf(groupBy).toDate(), value]
+    })
 
   const normalizedParams: LineChartProps = {
     groupBy,
     primaryDimension: { name: primaryDimension.name, data: primaryDimensionDataNormalized },
   }
 
-  // console.log("labels", _getChartLabels(normalizedParams))
-  console.log("labels", _getChartDatasets(normalizedParams))
+  if (secondaryDimension && secondaryDimensionDataNormalized) {
+    normalizedParams.secondaryDimension = { name: secondaryDimension.name, data: secondaryDimensionDataNormalized }
+  }
 
   return {
     labels: _getChartLabels(normalizedParams),
@@ -167,13 +138,13 @@ const _transformInputDataToChartJsSchema = (params: LineChartProps) => {
 }
 
 const LineChart = (props: LineChartProps) => {
-  const { primaryDimension, groupBy } = props
+  const { primaryDimension, secondaryDimension, groupBy } = props
 
   const chartjsData = useMemo(() => {
     if (groupBy && primaryDimension) {
-      return _transformInputDataToChartJsSchema({ primaryDimension, groupBy })
+      return _transformInputDataToChartJsSchema({ primaryDimension, secondaryDimension, groupBy })
     }
-  }, [primaryDimension, groupBy])
+  }, [primaryDimension, secondaryDimension, groupBy])
 
   if (!chartjsData) {
     return null
