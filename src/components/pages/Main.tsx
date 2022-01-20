@@ -167,9 +167,17 @@ const Main = () => {
     throw error
   }
 
+  const primaryDimensionData = metrics &&
+    primaryDimension && {
+      name: primaryDimension,
+      data: metrics[primaryDimension],
+    }
+
   return (
     <div>
-      <LineChart data={metrics} primaryDimension={primaryDimension} secondaryDimension={secondaryDimension} />
+      <div className="max-w-4xl mx-auto mb-4">
+        {primaryDimensionData && <LineChart groupBy="day" primaryDimension={primaryDimensionData} />}
+      </div>
       <div className="max-w-2xl mx-auto">
         {chartjsData && <ChartJS type="line" datasetIdKey="id" data={chartjsData} />}
       </div>
