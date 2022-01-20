@@ -1,7 +1,6 @@
 import { useMemo } from "react"
 import { Chart as ChartJS } from "react-chartjs-2"
 import moment from "moment"
-import { MetricsParsedData } from "hooks/appHooks"
 
 export interface LineChartDimensionParams {
   name: string
