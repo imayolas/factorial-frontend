@@ -1,12 +1,10 @@
 import "chart.js/auto"
-import { useMetrics } from "hooks/appHooks"
-import { useEffect, useState, useReducer, Reducer, ReducerState, ReducerAction } from "react"
+import { useMetrics, GroupBy } from "hooks/appHooks"
+import { useEffect, useReducer, Reducer } from "react"
 
 import LineChart from "components/ui/LineChart"
 import Select from "components/ui/Select"
 import DateInput from "components/ui/DateInput"
-
-type GroupBy = "day" | "hour" | "minute"
 
 interface MainState {
   primaryDimension: string | undefined
@@ -49,9 +47,9 @@ const mainStateReducer = (state: MainState, action: MainStateAction): MainState 
 }
 
 const Main = () => {
-  const { data: metrics, error, isLoading } = useMetrics()
-
   const [state, dispatch] = useReducer<Reducer<MainState, MainStateAction>>(mainStateReducer, initialState)
+
+  const { data: metrics, error, isLoading } = useMetrics(state)
 
   useEffect(() => {
     if (metrics) {
@@ -120,10 +118,10 @@ const Main = () => {
           />
         </div>
         <div>
-          <DateInput label="Date from" />
+          <DateInput label="Date from" onChange={(value) => dispatch({ type: "SET_FROM_DATE", payload: value })} />
         </div>
         <div>
-          <DateInput label="Date to" />
+          <DateInput label="Date to" onChange={(value) => dispatch({ type: "SET_TO_DATE", payload: value })} />
         </div>
       </div>
       {primaryDimensionData && (

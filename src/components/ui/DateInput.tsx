@@ -6,12 +6,12 @@ interface DateInputProps {
   className?: string
   options?: Array<string>
   value?: string | undefined | null
-  onChange?: (value: string) => void
+  onChange?: (value: Date) => void
 }
 
 const DateInput = ({ name, label, className, options, value = null, onChange, ...props }: DateInputProps) => {
   const _onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onChange && onChange(event.target.value)
+    onChange && onChange(new Date(event.target.value))
   }
 
   return (

@@ -1,5 +1,6 @@
 import { useMemo } from "react"
 import useSWR from "swr"
+import queryString from "query-string"
 
 export interface MetricsRawData {
   [key: string]: Array<[string, number]>
@@ -9,8 +10,28 @@ export interface MetricsParsedData {
   [key: string]: Array<[Date, number]>
 }
 
-export const useMetrics = () => {
-  let { data, error, mutate } = useSWR<MetricsRawData>(`http://localhost:4001/metrics?groupBy=day`, {
+export type GroupBy = "day" | "hour" | "minute"
+
+interface UseMetricsProps {
+  groupBy?: GroupBy
+  dateFrom?: Date
+  dateTo?: Date
+  dimension1?: string
+  dimension2?: string
+}
+
+export const useMetrics = (props?: UseMetricsProps) => {
+  if (!props) {
+    props = { groupBy: "day" }
+  }
+  if (!props.groupBy) {
+    props.groupBy = "day"
+  }
+
+  const qs = queryString.stringify(props)
+  const url = `http://localhost:4001/metrics?${qs}`
+
+  let { data, error, mutate } = useSWR<MetricsRawData>(url, {
     dedupingInterval: 10000,
   })
 
