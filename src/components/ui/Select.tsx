@@ -6,7 +6,7 @@ interface SelectProps {
   className?: string
   options: Array<string>
   value?: string | undefined | null
-  onChange?: (value: string) => void
+  onChange?: (value: any) => void
 }
 
 const Select = ({ name, label, className, options, value = null, onChange, ...props }: SelectProps) => {
