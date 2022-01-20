@@ -64,10 +64,6 @@ const Main = () => {
     }
   }, [metrics])
 
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
-
   if (error) {
     throw error
   }
@@ -133,6 +129,7 @@ const Main = () => {
           />
         </div>
       </div>
+      <div className="min-h-[2rem]">{isLoading && <div>Loading new data...</div>}</div>
       {primaryDimensionData && (
         <LineChart groupBy="day" primaryDimension={primaryDimensionData} secondaryDimension={secondaryDimensionData} />
       )}
