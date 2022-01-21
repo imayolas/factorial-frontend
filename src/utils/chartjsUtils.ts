@@ -1,4 +1,4 @@
-import { MetricsParsedData } from "hooks/appHooks"
+import { MetricsCollection } from "types/Global.types"
 
 const myData = {
   labels: ["January", "February", "March", "April", "May", "June", "July"],
@@ -19,7 +19,7 @@ const myData = {
     },
   ],
 }
-export const transformApiDataToChartJsDataset = (apiData: MetricsParsedData) => {
+export const transformApiDataToChartJsDataset = (apiData: MetricsCollection) => {
   const labels = Object.keys(apiData)
 
   const datasets = Object.entries(apiData).map(([metricName, data], index) => {

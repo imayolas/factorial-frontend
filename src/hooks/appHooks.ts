@@ -2,16 +2,11 @@ import { useMemo } from "react"
 import useSWR from "swr"
 import queryString from "query-string"
 import moment from "moment"
+import { MetricsCollection, GroupBy } from "types/Global.types"
 
 export interface MetricsRawData {
   [key: string]: Array<[string, number]>
 }
-
-export interface MetricsParsedData {
-  [key: string]: Array<[Date, number]>
-}
-
-export type GroupBy = "day" | "hour" | "minute"
 
 interface UseMetricsProps {
   groupBy?: GroupBy
@@ -52,7 +47,7 @@ export const useMetrics = (props?: UseMetricsProps) => {
       return null
     }
 
-    const res: MetricsParsedData = {}
+    const res: MetricsCollection = {}
 
     Object.entries(data).forEach(([metricName, metricData]) => {
       res[metricName] = metricData.map(([date, value]) => [new Date(date), value])

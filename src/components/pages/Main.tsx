@@ -1,6 +1,7 @@
 import "chart.js/auto"
-import { useMetrics, GroupBy, useDimensions } from "hooks/appHooks"
+import { useMetrics, useDimensions } from "hooks/appHooks"
 import { useEffect, useReducer, Reducer } from "react"
+import { GroupBy } from "types/Global.types"
 
 import LineChart from "components/ui/LineChart"
 import Select from "components/ui/Select"
