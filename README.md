@@ -1,10 +1,7 @@
 # @imayolas Factorial case
 
-### Pending
-
-- Add Error Boundary before Main
-- Share types
-
 ### Next steps
 
+- Add Error Boundary before Main
+- Persist state in the querystring
 - Add testing
