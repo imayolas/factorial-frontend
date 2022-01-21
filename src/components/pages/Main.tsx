@@ -37,7 +37,23 @@ const mainStateReducer = (state: MainState, action: MainStateAction): MainState 
     case "SET_SECONDARY_DIMENSION":
       return { ...state, secondaryDimension: action.payload }
     case "SET_GROUP_BY":
+      if (action.payload === "hour") {
+        const ThreeDaysAfterDateFrom = moment(state.dateFrom).add(3, "days")
+        const dateTo = moment(state.dateTo).isAfter(ThreeDaysAfterDateFrom)
+          ? ThreeDaysAfterDateFrom.format("YYYY-MM-DD")
+          : state.dateTo
+        return { ...state, groupBy: action.payload, dateTo }
+      }
+
+      if (action.payload === "minute") {
+        const OneDayAfterDateFrom = moment(state.dateFrom).add(1, "days")
+        const dateTo = moment(state.dateTo).isAfter(OneDayAfterDateFrom)
+          ? OneDayAfterDateFrom.format("YYYY-MM-DD")
+          : state.dateTo
+        return { ...state, groupBy: action.payload, dateTo }
+      }
       return { ...state, groupBy: action.payload }
+
     case "SET_DATE_FROM":
       return { ...state, dateFrom: action.payload }
     case "SET_DATE_TO":
@@ -145,7 +161,11 @@ const Main = () => {
       </div>
 
       {primaryDimensionData && (
-        <LineChart groupBy="day" primaryDimension={primaryDimensionData} secondaryDimension={secondaryDimensionData} />
+        <LineChart
+          groupBy={groupBy}
+          primaryDimension={primaryDimensionData}
+          secondaryDimension={secondaryDimensionData}
+        />
       )}
     </div>
   )

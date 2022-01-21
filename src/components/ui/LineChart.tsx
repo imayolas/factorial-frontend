@@ -50,7 +50,7 @@ const _getChartLabels = (params: LineChartProps) => {
   if (groupBy === "minute") {
     dateFormat += " HH:mm"
   } else if (groupBy === "hour") {
-    dateFormat += " HH"
+    dateFormat += " HH:00"
   }
   return _getFillerDates(minDate, maxDate, groupBy).map((date) => moment(date).format(dateFormat))
 }
