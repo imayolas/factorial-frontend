@@ -1,5 +1,5 @@
 import "chart.js/auto"
-import { useMetrics, GroupBy } from "hooks/appHooks"
+import { useMetrics, GroupBy, useDimensions } from "hooks/appHooks"
 import { useEffect, useReducer, Reducer } from "react"
 
 import LineChart from "components/ui/LineChart"
@@ -11,24 +11,24 @@ interface MainState {
   primaryDimension: string | undefined
   secondaryDimension: string | undefined
   groupBy: GroupBy
-  fromDate: Date | undefined
-  toDate: Date | undefined
+  dateFrom: string | undefined
+  dateTo: string | undefined
 }
 
 const initialState: MainState = {
   primaryDimension: undefined,
   secondaryDimension: undefined,
   groupBy: "day",
-  fromDate: moment().subtract(1, "month").toDate(),
-  toDate: new Date(),
+  dateFrom: moment().subtract(1, "month").format("YYYY-MM-DD"),
+  dateTo: moment().format("YYYY-MM-DD"),
 }
 
 type MainStateAction =
   | { type: "SET_PRIMARY_DIMENSION"; payload: string }
   | { type: "SET_SECONDARY_DIMENSION"; payload: string }
   | { type: "SET_GROUP_BY"; payload: GroupBy }
-  | { type: "SET_FROM_DATE"; payload: Date }
-  | { type: "SET_TO_DATE"; payload: Date }
+  | { type: "SET_DATE_FROM"; payload: string }
+  | { type: "SET_DATE_TO"; payload: string }
 
 const mainStateReducer = (state: MainState, action: MainStateAction): MainState => {
   switch (action.type) {
@@ -38,10 +38,10 @@ const mainStateReducer = (state: MainState, action: MainStateAction): MainState 
       return { ...state, secondaryDimension: action.payload }
     case "SET_GROUP_BY":
       return { ...state, groupBy: action.payload }
-    case "SET_FROM_DATE":
-      return { ...state, fromDate: action.payload }
-    case "SET_TO_DATE":
-      return { ...state, toDate: action.payload }
+    case "SET_DATE_FROM":
+      return { ...state, dateFrom: action.payload }
+    case "SET_DATE_TO":
+      return { ...state, dateTo: action.payload }
     default:
       return state
   }
@@ -49,32 +49,45 @@ const mainStateReducer = (state: MainState, action: MainStateAction): MainState 
 
 const Main = () => {
   const [state, dispatch] = useReducer<Reducer<MainState, MainStateAction>>(mainStateReducer, initialState)
+  const { dateFrom, dateTo, groupBy, primaryDimension, secondaryDimension } = state
 
-  const { data: metrics, error, isLoading } = useMetrics(state)
-
-  useEffect(() => {
-    if (metrics) {
-      const dimensions = Object.keys(metrics)
-      if (dimensions.length) {
-        dispatch({ type: "SET_PRIMARY_DIMENSION", payload: dimensions[0] })
-      }
-      if (dimensions.length > 1) {
-        dispatch({ type: "SET_SECONDARY_DIMENSION", payload: dimensions[1] })
-      }
-    }
-  }, [metrics])
-
-  if (error) {
-    throw error
+  const payload = {
+    // dateFrom: dateFrom && moment(dateFrom).isAfter("1970-01-01") ? dateFrom : undefined,
+    // dateTo: dateTo && moment(dateFrom).isAfter("1970-01-01") ? dateFrom : undefined,
+    groupBy: state.groupBy,
   }
 
-  const dimensions = metrics ? Object.keys(metrics) : []
+  const { data: metrics, error: metricsError } = useMetrics(payload)
+  const { data: dimensions, error: dimensionsError } = useDimensions()
+  console.log("metrics", metrics)
 
-  const primaryDimensionData = metrics &&
-    state.primaryDimension && {
-      name: state.primaryDimension,
-      data: metrics[state.primaryDimension],
+  if (metricsError) {
+    throw metricsError
+  }
+
+  if (dimensionsError) {
+    throw dimensionsError
+  }
+
+  useEffect(() => {
+    if (dimensions && metrics && !state.primaryDimension) {
+      dispatch({ type: "SET_PRIMARY_DIMENSION", payload: dimensions[0] })
     }
+  }, [dimensions, metrics, state.primaryDimension])
+
+  useEffect(() => {
+    if (dimensions && dimensions.length > 1 && metrics && !state.secondaryDimension) {
+      dispatch({ type: "SET_SECONDARY_DIMENSION", payload: dimensions[1] })
+    }
+  }, [dimensions, metrics, state.secondaryDimension])
+
+  const primaryDimensionData =
+    metrics && state.primaryDimension
+      ? {
+          name: state.primaryDimension,
+          data: metrics[state.primaryDimension],
+        }
+      : { name: "", data: [] }
 
   const secondaryDimensionData =
     metrics && state.secondaryDimension
@@ -91,7 +104,7 @@ const Main = () => {
           <Select
             name="dimension1"
             label="Dimension 1"
-            options={dimensions}
+            options={dimensions || []}
             value={state.primaryDimension}
             onChange={(value) => dispatch({ type: "SET_PRIMARY_DIMENSION", payload: value })}
           />
@@ -100,7 +113,7 @@ const Main = () => {
           <Select
             name="dimension2"
             label="Dimension 2"
-            options={dimensions}
+            options={dimensions || []}
             value={state.secondaryDimension}
             onChange={(value) => dispatch({ type: "SET_SECONDARY_DIMENSION", payload: value })}
           />
@@ -117,19 +130,21 @@ const Main = () => {
         <div>
           <DateInput
             label="Date from"
-            value={state.fromDate}
-            onChange={(value) => dispatch({ type: "SET_FROM_DATE", payload: value })}
+            value={state.dateFrom}
+            onChange={(value) => {
+              dispatch({ type: "SET_DATE_FROM", payload: value })
+            }}
           />
         </div>
         <div>
           <DateInput
             label="Date to"
-            value={state.toDate}
-            onChange={(value) => dispatch({ type: "SET_TO_DATE", payload: value })}
+            value={state.dateTo}
+            onChange={(value) => dispatch({ type: "SET_DATE_TO", payload: value })}
           />
         </div>
       </div>
-      <div className="min-h-[2rem]">{isLoading && <div>Loading new data...</div>}</div>
+
       {primaryDimensionData && (
         <LineChart groupBy="day" primaryDimension={primaryDimensionData} secondaryDimension={secondaryDimensionData} />
       )}

@@ -5,17 +5,13 @@ interface DateInputProps {
   label?: string
   className?: string
   options?: Array<string>
-  value?: string | Date | undefined | null
-  onChange?: (value: Date) => void
+  value?: string | undefined
+  onChange?: (value: string) => void
 }
 
-const DateInput = ({ name, label, className, options, value = null, onChange, ...props }: DateInputProps) => {
-  if (typeof value === "string") {
-    value = new Date(value)
-  }
-
+const DateInput = ({ name, label, className, options, value, onChange, ...props }: DateInputProps) => {
   const _onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onChange && onChange(new Date(event.target.value))
+    onChange && onChange(event.target.value)
   }
 
   return (
@@ -32,7 +28,7 @@ const DateInput = ({ name, label, className, options, value = null, onChange, ..
           className
         )}
         onChange={_onChange}
-        value={value ? moment(value).format("YYYY-MM-DD") : undefined}
+        value={value}
         {...props}
       />
     </div>

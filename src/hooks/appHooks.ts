@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 import useSWR from "swr"
 import queryString from "query-string"
+import moment from "moment"
 
 export interface MetricsRawData {
   [key: string]: Array<[string, number]>
@@ -14,22 +15,34 @@ export type GroupBy = "day" | "hour" | "minute"
 
 interface UseMetricsProps {
   groupBy?: GroupBy
-  dateFrom?: Date
-  dateTo?: Date
-  dimension1?: string
-  dimension2?: string
+  dateFrom?: string
+  dateTo?: string
+}
+
+export const useDimensions = () => {
+  const url = `http://localhost:4001/dimensions`
+
+  let { data, error, mutate } = useSWR<string[]>(url, {
+    dedupingInterval: 999999,
+  })
+
+  return {
+    data,
+    isLoading: !error && !data,
+    error,
+    mutate,
+  }
 }
 
 export const useMetrics = (props?: UseMetricsProps) => {
-  if (!props) {
-    props = { groupBy: "day" }
-  }
-  if (!props.groupBy) {
-    props.groupBy = "day"
-  }
+  const groupBy = props?.groupBy || "day"
+  const dateFrom = props?.dateFrom && moment(props.dateFrom).toDate()
+  const dateTo = props?.dateTo && moment(props.dateTo).toDate()
 
-  const qs = queryString.stringify(props)
+  const qs = queryString.stringify({ groupBy, dateFrom, dateTo })
+
   const url = `http://localhost:4001/metrics?${qs}`
+  console.log(222, url)
 
   let { data, error, mutate } = useSWR<MetricsRawData>(url, {
     dedupingInterval: 10000,

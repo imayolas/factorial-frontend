@@ -46,7 +46,7 @@ const _getChartLabels = (params: LineChartProps) => {
 
   const { minDate, maxDate } = _getMinMaxDates(primaryDimensionDates, secondaryDimensionDates)
 
-  let dateFormat: string = "YYYY-MM-DD"
+  let dateFormat: string = "DD/MM/YYYY"
   if (groupBy === "minute") {
     dateFormat += " HH:mm"
   } else if (groupBy === "hour") {
@@ -111,7 +111,6 @@ const _getChartDatasets = (params: LineChartProps) => {
 const _transformInputDataToChartJsSchema = (params: LineChartProps) => {
   const { primaryDimension, secondaryDimension, groupBy } = params
 
-  // Set all input dates to the beginning of the groupBy period
   const primaryDimensionDataNormalized: [Date, number][] = primaryDimension.data.map(([date, value]) => {
     return [moment(date).startOf(groupBy).toDate(), value]
   })
