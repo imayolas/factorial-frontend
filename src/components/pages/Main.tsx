@@ -52,14 +52,13 @@ const Main = () => {
   const { dateFrom, dateTo, groupBy, primaryDimension, secondaryDimension } = state
 
   const payload = {
-    // dateFrom: dateFrom && moment(dateFrom).isAfter("1970-01-01") ? dateFrom : undefined,
-    // dateTo: dateTo && moment(dateFrom).isAfter("1970-01-01") ? dateFrom : undefined,
-    groupBy: state.groupBy,
+    dateFrom: dateFrom && moment(dateFrom).isAfter("1970-01-01") ? dateFrom : undefined,
+    dateTo: dateTo && moment(dateFrom).isAfter("1970-01-01") ? dateTo : undefined,
+    groupBy: groupBy,
   }
 
   const { data: metrics, error: metricsError } = useMetrics(payload)
   const { data: dimensions, error: dimensionsError } = useDimensions()
-  console.log("metrics", metrics)
 
   if (metricsError) {
     throw metricsError
@@ -70,30 +69,30 @@ const Main = () => {
   }
 
   useEffect(() => {
-    if (dimensions && metrics && !state.primaryDimension) {
+    if (dimensions && metrics && !primaryDimension) {
       dispatch({ type: "SET_PRIMARY_DIMENSION", payload: dimensions[0] })
     }
-  }, [dimensions, metrics, state.primaryDimension])
+  }, [dimensions, metrics, primaryDimension])
 
   useEffect(() => {
-    if (dimensions && dimensions.length > 1 && metrics && !state.secondaryDimension) {
+    if (dimensions && dimensions.length > 1 && metrics && !secondaryDimension) {
       dispatch({ type: "SET_SECONDARY_DIMENSION", payload: dimensions[1] })
     }
-  }, [dimensions, metrics, state.secondaryDimension])
+  }, [dimensions, metrics, secondaryDimension])
 
   const primaryDimensionData =
-    metrics && state.primaryDimension
+    metrics && primaryDimension
       ? {
-          name: state.primaryDimension,
-          data: metrics[state.primaryDimension],
+          name: primaryDimension,
+          data: metrics[primaryDimension] || [],
         }
       : { name: "", data: [] }
 
   const secondaryDimensionData =
-    metrics && state.secondaryDimension
+    metrics && secondaryDimension
       ? {
-          name: state.secondaryDimension,
-          data: metrics[state.secondaryDimension],
+          name: secondaryDimension,
+          data: metrics[secondaryDimension] || [],
         }
       : undefined
 
@@ -105,7 +104,7 @@ const Main = () => {
             name="dimension1"
             label="Dimension 1"
             options={dimensions || []}
-            value={state.primaryDimension}
+            value={primaryDimension}
             onChange={(value) => dispatch({ type: "SET_PRIMARY_DIMENSION", payload: value })}
           />
         </div>
@@ -114,7 +113,7 @@ const Main = () => {
             name="dimension2"
             label="Dimension 2"
             options={dimensions || []}
-            value={state.secondaryDimension}
+            value={secondaryDimension}
             onChange={(value) => dispatch({ type: "SET_SECONDARY_DIMENSION", payload: value })}
           />
         </div>
@@ -123,14 +122,14 @@ const Main = () => {
             name="groupBy"
             label="Group by"
             options={["day", "hour", "minute"]}
-            value={state.groupBy}
+            value={groupBy}
             onChange={(value: GroupBy) => dispatch({ type: "SET_GROUP_BY", payload: value })}
           />
         </div>
         <div>
           <DateInput
             label="Date from"
-            value={state.dateFrom}
+            value={dateFrom}
             onChange={(value) => {
               dispatch({ type: "SET_DATE_FROM", payload: value })
             }}
@@ -139,7 +138,7 @@ const Main = () => {
         <div>
           <DateInput
             label="Date to"
-            value={state.dateTo}
+            value={dateTo}
             onChange={(value) => dispatch({ type: "SET_DATE_TO", payload: value })}
           />
         </div>

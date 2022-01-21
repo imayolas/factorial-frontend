@@ -42,7 +42,6 @@ export const useMetrics = (props?: UseMetricsProps) => {
   const qs = queryString.stringify({ groupBy, dateFrom, dateTo })
 
   const url = `http://localhost:4001/metrics?${qs}`
-  console.log(222, url)
 
   let { data, error, mutate } = useSWR<MetricsRawData>(url, {
     dedupingInterval: 10000,
