@@ -20,7 +20,7 @@ interface UseMetricsProps {
 }
 
 export const useDimensions = () => {
-  const url = `http://localhost:4001/dimensions`
+  const url = `/dimensions`
 
   let { data, error, mutate } = useSWR<string[]>(url, {
     dedupingInterval: 999999,
@@ -41,7 +41,7 @@ export const useMetrics = (props?: UseMetricsProps) => {
 
   const qs = queryString.stringify({ groupBy, dateFrom, dateTo })
 
-  const url = `http://localhost:4001/metrics?${qs}`
+  const url = `/metrics?${qs}`
 
   let { data, error, mutate } = useSWR<MetricsRawData>(url, {
     dedupingInterval: 10000,

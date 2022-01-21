@@ -1,14 +1,15 @@
-import Home from "./components/pages/Main"
+import Main from "./components/pages/Main"
 import MainLayout from "./components/layouts/MainLayout"
 import { SWRConfig } from "swr"
+import swrFetcher from "utils/swrFetcher"
 
-const swrFetcher = (url: RequestInfo, init?: RequestInit) => fetch(url, init).then((res) => res.json())
+const fetcher = swrFetcher(process.env.REACT_APP_NOT_SECRET_CODE)
 
 function App() {
   return (
-    <SWRConfig value={{ fetcher: swrFetcher }}>
+    <SWRConfig value={{ fetcher }}>
       <MainLayout>
-        <Home />
+        <Main />
       </MainLayout>
     </SWRConfig>
   )
