@@ -91,7 +91,7 @@ const _getChartDatasets = (params: LineChartProps) => {
       label: primaryDimension.name,
       data: primaryDimensionDataFilledWithBlanks,
       fill: false,
-      borderColor: "rgb(75, 192, 192)",
+      borderColor: "rgb(134,25,143)",
       tension: 0.5,
     },
   ]
@@ -101,7 +101,7 @@ const _getChartDatasets = (params: LineChartProps) => {
       label: secondaryDimension.name,
       data: secondaryDimensionDataFilledWithBlanks,
       fill: false,
-      borderColor: "rgb(90, 180, 321)",
+      borderColor: "rgb(234,179,8)",
       tension: 0.5,
     })
   }
