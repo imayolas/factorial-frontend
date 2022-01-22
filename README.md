@@ -1,4 +1,5 @@
 # @imayolas Factorial case - Frontend
+![image](https://user-images.githubusercontent.com/6229037/150638041-500d0e45-830d-4597-b8ac-c4445a7726be.png)
 
 ## Case statement
 
