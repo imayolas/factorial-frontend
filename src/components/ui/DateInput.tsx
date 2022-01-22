@@ -1,5 +1,5 @@
 import classnames from "utils/classnames"
-import moment from "moment"
+
 interface DateInputProps {
   name?: string
   label?: string

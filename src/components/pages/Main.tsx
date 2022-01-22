@@ -2,7 +2,7 @@ import "chart.js/auto"
 import { useMetrics, useDimensions } from "hooks/appHooks"
 import { useEffect, useReducer, Reducer } from "react"
 import { GroupBy } from "types/Global.types"
-
+import Title from "components/ui/Title"
 import LineChart from "components/ui/LineChart"
 import Select from "components/ui/Select"
 import DateInput from "components/ui/DateInput"
@@ -69,8 +69,12 @@ const Main = () => {
   const { dateFrom, dateTo, groupBy, primaryDimension, secondaryDimension } = state
 
   const payload = {
-    dateFrom: dateFrom && moment(dateFrom).isAfter("1970-01-01") ? dateFrom : undefined,
-    dateTo: dateTo && moment(dateFrom).isAfter("1970-01-01") ? dateTo : undefined,
+    dateFrom:
+      dateFrom && moment(dateFrom).isAfter("1970-01-01") && moment(dateFrom).isBefore("2099-12-31")
+        ? dateFrom
+        : undefined,
+    dateTo:
+      dateTo && moment(dateFrom).isAfter("1970-01-01") && moment(dateFrom).isBefore("2099-12-31") ? dateTo : undefined,
     groupBy: groupBy,
   }
 
@@ -114,7 +118,11 @@ const Main = () => {
       : undefined
 
   return (
-    <div className="space-y-4 max-w-6xl mx-auto mb-4">
+    <div className="space-y-8 max-w-6xl mx-auto mb-4">
+      <div className="space-y-2">
+        <Title>Charting very interesting metrics</Title>
+        <div className="text-gray-500 font-sm">A Factorial interview test by Isaac Mayolas</div>
+      </div>
       <div className="grid grid-cols-5 gap-x-6">
         <div>
           <Select
